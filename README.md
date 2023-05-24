@@ -1,4 +1,4 @@
-# Real-time multi-object, segmentation and pose tracking using Yolov8 with DeepOCSORT and LightMBN
+# Real-time multi-object, segmentation and pose tracking using Yolov8 | Yolo-NAS with DeepOCSORT and LightMBN
 
 
 <div align="center">
@@ -7,7 +7,8 @@
   </p>
   <br>
   <div>
-  <a href="https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch/actions"><img src="https://github.com/mikel-brostrom/Yolov5_DeepSort_Pytorch/workflows/CI%20CPU%20testing/badge.svg" alt="CI CPU testing"></a>
+  <a href="https://github.com/mikel-brostrom/yolov8_tracking/actions/workflows/ci.yml"><img src="https://github.com/mikel-brostrom/yolov8_tracking/actions/workflows/ci.yml/badge.svg" alt="CI CPU testing"></a>
+  <a href="https://pepy.tech/project/boxmot"><img src="https://static.pepy.tech/personalized-badge/boxmot?period=month&units=international_system&left_color=grey&right_color=orange&left_text=Downloads"></a>
   <br>  
   <a href="https://colab.research.google.com/drive/18nIqkBr68TkK8dHdarxTco6svHUJGggY?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
 <a href="https://doi.org/10.5281/zenodo.7629840"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.7629840.svg" alt="DOI"></a>
@@ -17,7 +18,7 @@
 
 ## Introduction
 
-This repo contains a collections of state-of-the-art multi-object trackers. Some of them are based on motion only, others on motion + appearance description. For the latter, state-of-the-art ReID model are provided. Supported ones at the moment are: [DeepOCSORT](https://arxiv.org/abs/2302.11813) [LightMBN](https://arxiv.org/pdf/2101.10774.pdf), [BoTSORT](https://arxiv.org/abs/2206.14651) [LightMBN](https://github.com/jixunbo/LightMBN)[](https://arxiv.org/pdf/2101.10774.pdf), [StrongSORT](https://github.com/dyhBUPT/StrongSORT)[](https://arxiv.org/abs/2202.13514) [LightMBN](https://github.com/jixunbo/LightMBN)[](https://arxiv.org/pdf/2101.10774.pdf), [OCSORT](https://github.com/noahcao/OC_SORT)[](https://arxiv.org/abs/2203.14360) and [ByteTrack](https://github.com/ifzhang/ByteTrack)[](https://arxiv.org/abs/2110.06864).
+This repo contains a collections of state-of-the-art multi-object trackers. Some of them are based on motion only, others on motion + appearance description. For the latter, state-of-the-art ReID model are downloaded automatically as well. Supported ones at the moment are: [DeepOCSORT](https://arxiv.org/abs/2302.11813) [LightMBN](https://arxiv.org/pdf/2101.10774.pdf), [BoTSORT](https://arxiv.org/abs/2206.14651) [LightMBN](https://github.com/jixunbo/LightMBN)[](https://arxiv.org/pdf/2101.10774.pdf), [StrongSORT](https://github.com/dyhBUPT/StrongSORT)[](https://arxiv.org/abs/2202.13514) [LightMBN](https://github.com/jixunbo/LightMBN)[](https://arxiv.org/pdf/2101.10774.pdf), [OCSORT](https://github.com/noahcao/OC_SORT)[](https://arxiv.org/abs/2203.14360) and [ByteTrack](https://github.com/ifzhang/ByteTrack)[](https://arxiv.org/abs/2110.06864).
 
 We provide examples on how to use this package together with popular object detection models. Right now only [Yolov8](https://github.com/ultralytics) is available. Yolo-NAS & YOLOX coming soon.
 
@@ -74,7 +75,7 @@ pip install boxmot
 
 Grab a coffee, this may take a few minutes
 
-## Yolov8 example
+## Yolov8 tracking example
 
 <details>
 <summary>Click to expand!</summary>
@@ -128,8 +129,6 @@ $ python examples/track.py --source 0                               # webcam
 There is a clear trade-off between model inference speed and overall performance. In order to make it possible to fulfill your inference speed/accuracy needs you can select a Yolov5 family model for automatic download. These model can be further optimized for you needs by the [export.py](https://github.com/ultralytics/yolov5/blob/master/export.py) script
 
 ```bash
-
-
 $ python examples/track.py --source 0 --yolo-model yolov8n.pt --img 640
                                           yolov8s.tflite
                                           yolov8m.pt
@@ -197,6 +196,18 @@ The set of hyperparameters leading to the best HOTA result are written to the tr
 </details>
   
 </details>
+  
+## Yolo-NAS tracking example
+  
+<details>
+<summary>Click to expand!</summary>
+  
+```bash
+$ python examples/yolo_nas_track.py --source 0
+```
+  
+</details>  
+
 
 ## Custom object detection model example
   
