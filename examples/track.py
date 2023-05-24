@@ -6,6 +6,7 @@ import argparse
 import numpy as np
 import cv2
 from types import SimpleNamespace
+import platform
 
 from boxmot.tracker_zoo import create_tracker
 from ultralytics.yolo.engine.model import YOLO, TASK_MAP
@@ -21,6 +22,27 @@ ROOT = FILE.parents[0].parents[0]  # repo root absolute path
 EXAMPLES = FILE.parents[0]  # examples absolute path
 WEIGHTS = EXAMPLES / 'weights'
 
+# Micmak
+# gst_output = "appsrc ! videoconvert ! video/x-raw,format=I420 ! nvvidconv ! video/x-raw(memory:NVMM) ! nvoverlaysink async=true sync=false"
+# w = 640
+# h = 480
+
+
+gst_output = "appsrc !  tee name=t "
+# gst_output = gst_output + "videoconvert ! video/x-raw,format=I420 !  tee name=t "
+
+# gst_output = "appsrc ! video/x-raw,format=NV12 ! \
+#     videoconvert ! video/x-raw ! "
+gst_output = gst_output + "videoconvert ! video/x-raw,format=I420 !  tee name=t "
+gst_output = gst_output + "  t. ! v4l2sink device=/dev/video6 sync=false async=false "
+gst_output = gst_output + "  t. ! v4l2sink device=/dev/video7 sync=false async=false "
+gst_output = gst_output + "  t. ! v4l2sink device=/dev/video8 sync=false async=false " 
+w = 1920
+h = 1080
+
+fps = 30.0
+
+out = cv2.VideoWriter(gst_output, cv2.CAP_GSTREAMER, 0, float(fps), (int(w), int(h)))
 
 def on_predict_start(predictor):
     predictor.trackers = []
@@ -80,7 +102,7 @@ def run(args):
         predictor.setup_model(model=model.model, verbose=False)
     predictor.setup_source(predictor.args.source)
     
-    predictor.args.imgsz = check_imgsz(predictor.args.imgsz, stride=model.model.stride, min_dim=2)  # check image size
+    # predictor.args.imgsz = check_imgsz(predictor.args.imgsz, stride=model.model.stride, min_dim=2)  # check image size
     predictor.save_dir = increment_path(Path(predictor.args.project) / predictor.args.name, exist_ok=predictor.args.exist_ok)
     
     # Check if save_dir/ label file exists
@@ -135,6 +157,29 @@ def run(args):
             
             }
 
+            # Micmak
+            # print('p')
+            # print(type(p))
+            # print(p)
+            # print('p.parent')
+            # print(type(p.parent))
+            # print(p.parent)
+            # print('predictor')
+            # print(type(predictor))
+            # print(type(predictor.results[i])) # class 'ultralytics.yolo.engine.results.Results
+            # print(predictor.results[i])
+
+            # Working
+            # print(predictor.results[i].boxes.xyxy.cpu().numpy())
+            # print(predictor.results[i].boxes.conf.cpu().numpy())
+            # print(predictor.results[i].boxes.cls.cpu().numpy())
+
+            # Checking
+            # print(predictor.results[i].boxes.n)
+            # print(predictor.results[i].boxes.is_track)
+            # print(predictor.results[i].boxes.data)
+            # print(int(predictor.results[i].boxes.id.item()))
+
             # overwrite bbox results with tracker predictions
             if predictor.tracker_outputs[i].size != 0:
                 predictor.results[i].boxes = Boxes(
@@ -162,6 +207,8 @@ def run(args):
                         frame_idx,
                         i,
                     )
+            if predictor.plotted_img is not None:
+                out.write(predictor.plotted_img)
 
             # display an image in a window using OpenCV imshow()
             if predictor.args.show and predictor.plotted_img is not None:
@@ -177,6 +224,7 @@ def run(args):
         if predictor.args.verbose:
             LOGGER.info(f'{s}YOLO {predictor.profilers[1].dt * 1E3:.1f}ms, TRACKING {predictor.profilers[3].dt * 1E3:.1f}ms')
 
+    out.release()
     # Release assets
     if isinstance(predictor.vid_writer[-1], cv2.VideoWriter):
         predictor.vid_writer[-1].release()  # release final video writer
