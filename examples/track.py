@@ -151,7 +151,8 @@ def run(args):
                 # get raw bboxes tensor
                 dets = predictor.results[i].boxes.data
                 # get tracker predictions
-                predictor.tracker_outputs[i] = predictor.trackers[i].update(dets.cpu().detach(), im0)
+                if predictor.args.mode == 'track':
+                    predictor.tracker_outputs[i] = predictor.trackers[i].update(dets.cpu().detach(), im0)
             predictor.results[i].speed = {
                 'preprocess': predictor.profilers[0].dt * 1E3 / n,
                 'inference': predictor.profilers[1].dt * 1E3 / n,
@@ -160,13 +161,14 @@ def run(args):
             
             }
 
-            # overwrite bbox results with tracker predictions
-            if predictor.tracker_outputs[i].size != 0:
-                predictor.results[i].boxes = Boxes(
-                    # xyxy, (track_id), conf, cls
-                    boxes=torch.from_numpy(predictor.tracker_outputs[i]).to(dets.device),
-                    orig_shape=im0.shape[:2],  # (height, width)
-                )
+            if predictor.tracker_outputs[i] != None: # track mode
+                # overwrite bbox results with tracker predictions
+                if predictor.tracker_outputs[i].size != 0:
+                    predictor.results[i].boxes = Boxes(
+                        # xyxy, (track_id), conf, cls
+                        boxes=torch.from_numpy(predictor.tracker_outputs[i]).to(dets.device),
+                        orig_shape=im0.shape[:2],  # (height, width)
+                    )
             
             # write inference results to a file or directory   
             if predictor.args.verbose or predictor.args.save or predictor.args.save_txt or predictor.args.show:
@@ -179,14 +181,15 @@ def run(args):
                 else:
                     # append folder name containing current img
                     predictor.MOT_txt_path = predictor.txt_path.parent / p.parent.name
-                    
-                if predictor.tracker_outputs[i].size != 0 and predictor.args.save_txt:
-                    write_MOT_results(
-                        predictor.MOT_txt_path,
-                        predictor.results[i],
-                        frame_idx,
-                        i,
-                    )
+                
+                if predictor.tracker_outputs[i] != None: # track mode
+                    if predictor.tracker_outputs[i].size != 0 and predictor.args.save_txt:
+                        write_MOT_results(
+                            predictor.MOT_txt_path,
+                            predictor.results[i],
+                            frame_idx,
+                            i,
+                        )
             # Micmak
             # info we may need
             # print(predictor.results[i].boxes.xyxy.cpu().numpy()) # boxes
@@ -215,7 +218,10 @@ def run(args):
 
         # print time (inference-only)
         if predictor.args.verbose:
-            LOGGER.info(f'{s}YOLO {predictor.profilers[1].dt * 1E3:.1f}ms, TRACKING {predictor.profilers[3].dt * 1E3:.1f}ms')
+            str_log_info = f'{s}YOLO {predictor.profilers[1].dt * 1E3:.1f}ms'
+            if predictor.tracker_outputs[i] != None:
+                str_log_info += ', TRACKING {predictor.profilers[3].dt * 1E3:.1f}ms'
+            LOGGER.info(str_log_info)
 
     # Release assets
     out.release()
@@ -258,6 +264,10 @@ def parse_opt():
     parser.add_argument('--hide-label', action='store_true', help='hide labels when show')
     parser.add_argument('--hide-conf', action='store_true', help='hide confidences when show')
     parser.add_argument('--save-txt', action='store_true', help='save tracking results in a txt file')
+
+    # Micmak
+    parser.add_argument('--mode', type=str, default='track', choices={'track', 'detect'}, help='running mode: "track" or "detect" [default: "track"]')
+
     opt = parser.parse_args()
     print_args(vars(opt))
     return opt
