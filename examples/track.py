@@ -22,23 +22,26 @@ ROOT = FILE.parents[0].parents[0]  # repo root absolute path
 EXAMPLES = FILE.parents[0]  # examples absolute path
 WEIGHTS = EXAMPLES / 'weights'
 
-# Micmak
-# gst_output = "appsrc ! videoconvert ! video/x-raw,format=I420 ! nvvidconv ! video/x-raw(memory:NVMM) ! nvoverlaysink async=true sync=false"
+# Micmak: Working
+gst_output = "appsrc ! videoconvert ! video/x-raw,format=I420 ! nvvidconv ! video/x-raw(memory:NVMM) ! nvoverlaysink async=true sync=false"
+w = 2048
+h = 1536
+
 # w = 640
 # h = 480
 
 
-gst_output = "appsrc !  tee name=t "
-# gst_output = gst_output + "videoconvert ! video/x-raw,format=I420 !  tee name=t "
+# gst_output = "appsrc ! "
+# # gst_output = gst_output + "videoconvert ! video/x-raw,format=I420 !  tee name=t "
 
-# gst_output = "appsrc ! video/x-raw,format=NV12 ! \
-#     videoconvert ! video/x-raw ! "
-gst_output = gst_output + "videoconvert ! video/x-raw,format=I420 !  tee name=t "
-gst_output = gst_output + "  t. ! v4l2sink device=/dev/video6 sync=false async=false "
-gst_output = gst_output + "  t. ! v4l2sink device=/dev/video7 sync=false async=false "
-gst_output = gst_output + "  t. ! v4l2sink device=/dev/video8 sync=false async=false " 
-w = 1920
-h = 1080
+# # gst_output = "appsrc ! video/x-raw,format=NV12 ! \
+# #     videoconvert ! video/x-raw ! "
+# gst_output = gst_output + "videoconvert ! video/x-raw,format=I420 !  tee name=t "
+# gst_output = gst_output + "  t. ! v4l2sink device=/dev/video6 sync=false async=false "
+# gst_output = gst_output + "  t. ! v4l2sink device=/dev/video7 sync=false async=false "
+# gst_output = gst_output + "  t. ! v4l2sink device=/dev/video8 sync=false async=false " 
+# w = 1920
+# h = 1080
 
 fps = 30.0
 
@@ -157,29 +160,6 @@ def run(args):
             
             }
 
-            # Micmak
-            # print('p')
-            # print(type(p))
-            # print(p)
-            # print('p.parent')
-            # print(type(p.parent))
-            # print(p.parent)
-            # print('predictor')
-            # print(type(predictor))
-            # print(type(predictor.results[i])) # class 'ultralytics.yolo.engine.results.Results
-            # print(predictor.results[i])
-
-            # Working
-            # print(predictor.results[i].boxes.xyxy.cpu().numpy())
-            # print(predictor.results[i].boxes.conf.cpu().numpy())
-            # print(predictor.results[i].boxes.cls.cpu().numpy())
-
-            # Checking
-            # print(predictor.results[i].boxes.n)
-            # print(predictor.results[i].boxes.is_track)
-            # print(predictor.results[i].boxes.data)
-            # print(int(predictor.results[i].boxes.id.item()))
-
             # overwrite bbox results with tracker predictions
             if predictor.tracker_outputs[i].size != 0:
                 predictor.results[i].boxes = Boxes(
@@ -207,12 +187,25 @@ def run(args):
                         frame_idx,
                         i,
                     )
-            if predictor.plotted_img is not None:
+            # Micmak
+            # info we may need
+            # print(predictor.results[i].boxes.xyxy.cpu().numpy()) # boxes
+            # print(predictor.results[i].boxes.conf.cpu().numpy()) # confs
+            # print(predictor.results[i].boxes.cls.cpu().numpy()) # clss
+            # print(predictor.results[i].boxes.id.cpu().numpy() 
+            #       if predictor.results[i].boxes.id != None else predictor.results[i].boxes.id) # NEW: id
+
+            # TESTING
+            # print(type(predictor.plotted_img)) # numpy array
+            # print(predictor.plotted_img.shape)
+
+            # display an image in a window using out.write()
+            if predictor.args.show and predictor.plotted_img is not None:
                 out.write(predictor.plotted_img)
 
             # display an image in a window using OpenCV imshow()
-            if predictor.args.show and predictor.plotted_img is not None:
-                predictor.show(p.parent)
+            # if predictor.args.show and predictor.plotted_img is not None:
+            #     predictor.show(p.parent)
 
             # save video predictions
             if predictor.args.save and predictor.plotted_img is not None:
@@ -224,10 +217,12 @@ def run(args):
         if predictor.args.verbose:
             LOGGER.info(f'{s}YOLO {predictor.profilers[1].dt * 1E3:.1f}ms, TRACKING {predictor.profilers[3].dt * 1E3:.1f}ms')
 
-    out.release()
     # Release assets
-    if isinstance(predictor.vid_writer[-1], cv2.VideoWriter):
-        predictor.vid_writer[-1].release()  # release final video writer
+    out.release()
+
+    # # Release assets
+    # if isinstance(predictor.vid_writer[-1], cv2.VideoWriter):
+    #     predictor.vid_writer[-1].release()  # release final video writer
 
     # Print results
     if predictor.args.verbose and predictor.seen:

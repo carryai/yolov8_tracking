@@ -13,11 +13,19 @@ predictor.args.imgsz = check_imgsz(predictor.args.imgsz, stride=model.model.stri
 
 at `examples/track.py`, which disables the checking of image size and does not affect the other functions.
 
+Used `cv2.CAP_GSTREAMER` 
+
 ### Example command that works
-Use the following command in terminal to run tracking:
+Use the following command in terminal to run tracking for local video:
 
 ```
 python3 examples/track.py --source ~/test_videos/palace_original.mp4 --yolo-model ~/test/yolov8n.engine --tracking-method bytetrack --save --device 0
+```
+
+or the following for USB camera:
+
+```
+python3 examples/track.py --yolo-model ~/test/yolov8n.engine --tracking-method bytetrack --device 0 --show
 ```
 
 Ensure that the paths for source video and yolo model work for you.
